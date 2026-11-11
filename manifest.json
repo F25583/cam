@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "AI Camera Enhancer & Smart Zoom",
+  "version": "1.0",
+  "description": "أداة الزوم الذكي وتفتيح إضاءة كاميرات المراقبة ومنع البكسلة",
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["http://10.43.24*", "https://10.43.24*"],
+      "js": ["content.js"]
+    }
+  ]
+}
