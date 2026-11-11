@@ -6,8 +6,9 @@
   "permissions": ["activeTab"],
   "content_scripts": [
     {
-      "matches": ["http://10.43.24*", "https://10.43.24*"],
+      "matches": ["*://10.43.24.158/*"],
       "js": ["content.js"]
     }
   ]
 }
+
