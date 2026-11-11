@@ -1,5 +1,4 @@
 (function() {
-    // متغيرات لحفظ حالة البرنامج والتحكم في الإغلاق النهائي
     let isClosedByUser = false;
     let currentZoom = 1;
     let currentPanX = 0;
@@ -9,12 +8,10 @@
         let mainWrapper = document.body;
         let panel = document.getElementById('ai_camera_panel');
 
-        // الحفاظ على أبعاد المتصفح مع تفعيل التحرك الحر (X, Y) في جميع الاتجاهات دون مساحات بيضاء
         mainWrapper.style.imageRendering = "auto";
-        mainWrapper.style.transformOrigin = "center center"; // الزوم من المنتصف لمنع قطع الشاشة
+        mainWrapper.style.transformOrigin = "center center"; 
         mainWrapper.style.transform = `scale(${currentZoom}) translate(${currentPanX}px, ${currentPanY}px)`;
         
-        // جلب قيم الفلاتر والميزات الجديدة
         let brightness = document.getElementById('smart_light') ? document.getElementById('smart_light').value : 100;
         let sharpValue = document.getElementById('smart_sharp') ? document.getElementById('smart_sharp').value : 0;
         let isMonochrome = document.getElementById('ai_mono_mode') && document.getElementById('ai_mono_mode').checked;
@@ -24,7 +21,6 @@
         let saturateValue = isMonochrome ? 0 : 110;
         let invertValue = isInverted ? 100 : 0;
 
-        // دمج فلاتر الشحذ والميزات المتقدمة معاً مصفوفياً
         mainWrapper.style.filter = `brightness(${brightness}%) contrast(${calculatedContrast}%) saturate(${saturateValue}%) invert(${invertValue}%) drop-shadow(0px 0px ${sharpValue/2}px rgba(0,0,0,0.5))`;
         
         if (panel) {
@@ -48,7 +44,6 @@
     }
 
     function initEnhancer() {
-        // حظر إعادة الفتح تلقائياً إذا قام المستخدم بإغلاق البرنامج
         if (isClosedByUser || document.getElementById('ai_camera_panel')) return;
 
         let panel = document.createElement('div');
@@ -63,7 +58,6 @@
                 </div>
             </div>
             
-            <!-- قسم أشرطة التحكم الأساسية -->
             <div style="margin-bottom:10px;">
                 <label style="font-size:11px; display:block; margin-bottom:2px;">🔍 الزوم الفائق بدون بكسلة: <span id="z_val" style="color:#4CAF50;">1x</span></label>
                 <input type="range" id="smart_zoom" min="1" max="5" value="1" step="0.1" style="width:100%; cursor:pointer;">
@@ -80,8 +74,9 @@
             </div>
             
             <div style="margin-bottom:10px;">
-                <label style="font-size:11px; display:block; margin-bottom:2px;">☀️ تفتيح الممرات والظلال: <span id="l_val" style="color:#4CAF50;">100%</span></label>
-                <input type="range" id="smart_light" min="100" max="250" value="100" step="5" style="width:100%; cursor:pointer;">
+                <label style="font-size:11px; display:block; margin-bottom:2px;">☀️ التحكم في مستوي الإضاءة: <span id="l_val" style="color:#4CAF50;">100%</span></label>
+                <!-- 🆕 تم تعديل النطاق هنا بذكاء من 50% كحد أدنى للتعتيم وحتي 250% للتفتيح الكامل -->
+                <input type="range" id="smart_light" min="50" max="250" value="100" step="5" style="width:100%; cursor:pointer;">
             </div>
             
             <div style="margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:8px;">
@@ -89,7 +84,6 @@
                 <input type="range" id="smart_sharp" min="0" max="10" value="0" step="0.5" style="width:100%; cursor:pointer;">
             </div>
 
-            <!-- 🆕 أدوات مراجعة الكاميرات الجنائية المضافة حديثاً -->
             <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">
                 <h5 style="margin:0 0 6px 0; color:#4CAF50; font-size:12px; font-weight:bold;">🛠️ أدوات تدقيق ومراجعة الفيديو الحية:</h5>
                 <label style="display:flex; align-items:center; font-size:11px; cursor:pointer; margin-bottom:6px;">
@@ -135,7 +129,6 @@
         monoCheck.addEventListener('change', updateAllFilters);
         invertCheck.addEventListener('change', updateAllFilters);
 
-        // برمجة زر الإغلاق لمنع الفتح التلقائي مجدداً نهائياً
         document.getElementById('ai_close_btn').onclick = function() {
             isClosedByUser = true;
             document.body.style.transform = "none";
@@ -145,6 +138,5 @@
         };
     }
 
-    // تشغيل الفحص الدوري الذكي مع احترام رغبة المستخدم في الإغلاق
     setInterval(initEnhancer, 1000);
 })();
