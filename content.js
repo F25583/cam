@@ -1,5 +1,4 @@
 (function() {
-    let isClosedByUser = false;
     let currentZoom = 1;
     let currentPanX = 0;
     let currentPanY = 0;
@@ -43,10 +42,28 @@
         };
     }
 
-    function initEnhancer() {
-        if (isClosedByUser || document.getElementById('ai_camera_panel')) return;
+    function closeAndResetPanel() {
+        let panel = document.getElementById('ai_camera_panel');
+        if (panel) {
+            document.body.style.transform = "none";
+            document.body.style.filter = "none";
+            document.body.style.imageRendering = "auto";
+            panel.remove();
+            currentZoom = 1; currentPanX = 0; currentPanY = 0;
+        }
+    }
 
-        let panel = document.createElement('div');
+    function toggleEnhancerPanel() {
+        let panel = document.getElementById('ai_camera_panel');
+        
+        // إذا كانت اللوحة مفتوحة بالفعل، نقوم بإغلاقها وإعادة ضبط الشاشة
+        if (panel) {
+            closeAndResetPanel();
+            return;
+        }
+
+        // بناء اللوحة فقط بناءً على رغبتك ونقرة الماوس
+        panel = document.createElement('div');
         panel.id = 'ai_camera_panel';
         panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:99999999; background:rgba(20,20,20,0.96); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:280px; border: 1px solid #4CAF50;";
         
@@ -75,7 +92,6 @@
             
             <div style="margin-bottom:10px;">
                 <label style="font-size:11px; display:block; margin-bottom:2px;">☀️ التحكم في مستوي الإضاءة: <span id="l_val" style="color:#4CAF50;">100%</span></label>
-                <!-- 🆕 تم تعديل النطاق هنا بذكاء من 50% كحد أدنى للتعتيم وحتي 250% للتفتيح الكامل -->
                 <input type="range" id="smart_light" min="50" max="250" value="100" step="5" style="width:100%; cursor:pointer;">
             </div>
             
@@ -129,14 +145,13 @@
         monoCheck.addEventListener('change', updateAllFilters);
         invertCheck.addEventListener('change', updateAllFilters);
 
-        document.getElementById('ai_close_btn').onclick = function() {
-            isClosedByUser = true;
-            document.body.style.transform = "none";
-            document.body.style.filter = "none";
-            document.body.style.imageRendering = "auto";
-            panel.remove();
-        };
+        document.getElementById('ai_close_btn').onclick = closeAndResetPanel;
     }
 
-    setInterval(initEnhancer, 1000);
+    // الاستماع لإشارة المتصفح القادمة من نقر الأيقونة لتشغيل أو إطفاء الأداة
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.action === "toggle_ai_panel") {
+            toggleEnhancerPanel();
+        }
+    });
 })();
