@@ -56,13 +56,12 @@
     function toggleEnhancerPanel() {
         let panel = document.getElementById('ai_camera_panel');
         
-        // إذا كانت اللوحة مفتوحة بالفعل، نقوم بإغلاقها وإعادة ضبط الشاشة
         if (panel) {
             closeAndResetPanel();
             return;
         }
 
-        // بناء اللوحة فقط بناءً على رغبتك ونقرة الماوس
+        // تم إلغاء شرط فحص الكاميرا؛ اللوحة ستفتح الآن فوراً عند الضغط على الأيقونة في أي صفحة
         panel = document.createElement('div');
         panel.id = 'ai_camera_panel';
         panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:99999999; background:rgba(20,20,20,0.96); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:280px; border: 1px solid #4CAF50;";
@@ -148,7 +147,6 @@
         document.getElementById('ai_close_btn').onclick = closeAndResetPanel;
     }
 
-    // الاستماع لإشارة المتصفح القادمة من نقر الأيقونة لتشغيل أو إطفاء الأداة
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === "toggle_ai_panel") {
             toggleEnhancerPanel();
