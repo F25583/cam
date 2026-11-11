@@ -7,7 +7,11 @@
         let mainWrapper = document.body;
         let panel = document.getElementById('ai_camera_panel');
 
-        mainWrapper.style.imageRendering = "auto";
+        // 1. إجبار المتصفح على تشغيل أقوى محركات شحذ الحواف الرسومية لمنع الضبابية نهائياً
+        mainWrapper.style.setProperty('image-rendering', 'crisp-edges', 'important');
+        mainWrapper.style.setProperty('image-rendering', '-webkit-optimize-contrast', 'important');
+        mainWrapper.style.setProperty('image-rendering', 'pixelated', 'important');
+        
         mainWrapper.style.transformOrigin = "center center"; 
         mainWrapper.style.transform = `scale(${currentZoom}) translate(${currentPanX}px, ${currentPanY}px)`;
         
@@ -16,11 +20,13 @@
         let isMonochrome = document.getElementById('ai_mono_mode') && document.getElementById('ai_mono_mode').checked;
         let isInverted = document.getElementById('ai_invert_mode') && document.getElementById('ai_invert_mode').checked;
 
-        let calculatedContrast = 100 + (sharpValue * 10);
-        let saturateValue = isMonochrome ? 0 : 110;
+        // 2. معادلة رياضية مطورة لزيادة التباين والشحذ النقي مصفوفياً (AI Sharp Extended)
+        let calculatedContrast = 100 + (sharpValue * 15); // زيادة القوة بنسبة 50% عن الإصدار السابق
+        let saturateValue = isMonochrome ? 0 : (110 + parseInt(sharpValue * 2));
         let invertValue = isInverted ? 100 : 0;
 
-        mainWrapper.style.filter = `brightness(${brightness}%) contrast(${calculatedContrast}%) saturate(${saturateValue}%) invert(${invertValue}%) drop-shadow(0px 0px ${sharpValue/2}px rgba(0,0,0,0.5))`;
+        // دمج الفلاتر معاً لإنتاج أعلى حدة ممكنة لتفاصيل الحركة والوجوه
+        mainWrapper.style.filter = `brightness(${brightness}%) contrast(${calculatedContrast}%) saturate(${saturateValue}%) invert(${invertValue}%) contrast(105%)`;
         
         if (panel) {
             panel.style.transform = `scale(${1 / currentZoom})`;
@@ -61,7 +67,6 @@
             return;
         }
 
-        // تم إلغاء شرط فحص الكاميرا؛ اللوحة ستفتح الآن فوراً عند الضغط على الأيقونة في أي صفحة
         panel = document.createElement('div');
         panel.id = 'ai_camera_panel';
         panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:99999999; background:rgba(20,20,20,0.96); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:280px; border: 1px solid #4CAF50;";
@@ -70,7 +75,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
                 <span id="ai_close_btn" style="cursor:pointer; color:#ff4d4d; font-weight:bold; font-size:16px; padding:0 5px; user-select:none;">✕</span>
                 <div id="ai_drag_handle" style="cursor:move; flex-grow:1; text-align:center; font-weight:bold; color:#4CAF50; font-size:13px; user-select:none;">
-                    ⣿ محرك المراجعة والنقاء الفائق V2 ⣿
+                    ⣿ محرك النقاء والوضوح الأقصى V3 ⣿
                 </div>
             </div>
             
@@ -131,7 +136,7 @@
             document.getElementById('x_val').innerText = currentPanX + "px";
             document.getElementById('y_val').innerText = currentPanY + "px";
             document.getElementById('l_val').innerText = lightSlider.value + "%";
-            document.getElementById('c_val').innerText = "+" + (sharpSlider.value * 10) + "%";
+            document.getElementById('c_val').innerText = "+" + (sharpSlider.value * 15) + "%";
 
             applyAdvancedTransformations();
         }
