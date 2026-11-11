@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "AI Camera Enhancer & Smart Zoom",
-  "version": "1.4",
-  "description": "أداة الزوم الذكي وتفتيح إضاءة كاميرات المراقبة ومنع البكسلة لجميع أجهزة DIGIEVER",
-  "permissions": ["activeTab"],
+  "version": "2.0",
+  "description": "أداة الزوم الذكي وتفتيح إضاءة كاميرات المراقبة عند الضغط على الأيقونة",
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {},
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
