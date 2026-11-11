@@ -1,44 +1,42 @@
 (function() {
-    function findCameraElement(doc) {
-        if (!doc) return null;
-        return doc.querySelector('video') || 
-               doc.querySelector('canvas') || 
-               doc.querySelector('img[id*="video"]') || 
-               doc.querySelector('img[src*="video"]') || 
-               doc.querySelector('img[src*="live"]') ||
-               doc.querySelector('object') || 
-               doc.querySelector('embed') ||
-               doc.getElementById('vlc') ||
-               doc.querySelector('.video-stream') ||
-               doc.querySelector('img[id*="cam"]');
+    function applyStyleToAllCameras(zoom, brightness, contrast) {
+        // 1. البحث عن جميع العناصر المحتملة للبث (فيديو، كانفاس، صور، كائنات)
+        let elements = document.querySelectorAll('video, canvas, img, object, embed');
+        
+        elements.forEach(el => {
+            // استبعاد أزرار الواجهة ولوحة التحكم نفسها من التكبير
+            if (el.closest('#ai_camera_panel') || el.width < 100 || el.height < 100) return;
+
+            // حقن التعديلات الرسومية مباشرة داخل خصائص العنصر
+            el.style.setProperty('image-rendering', 'crisp-edges', 'important');
+            el.style.setProperty('image-rendering', '-webkit-optimize-contrast', 'important');
+            el.style.setProperty('transform-origin', 'top left', 'important');
+            el.style.setProperty('transform', `scale(${zoom})`, 'important');
+            el.style.setProperty('filter', `brightness(${brightness}%) contrast(${contrast}%) saturate(115%)`, 'important');
+        });
+
+        // 2. اختراق طبقات الـ iframes المعزولة وتطبيق نفس التعديل بالداخل
+        document.querySelectorAll('iframe').forEach(iframe => {
+            try {
+                let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                let innerElements = iframeDoc.querySelectorAll('video, canvas, img, object, embed');
+                innerElements.forEach(el => {
+                    if (el.width < 100 || el.height < 100) return;
+                    el.style.setProperty('image-rendering', 'crisp-edges', 'important');
+                    el.style.setProperty('transform-origin', 'top left', 'important');
+                    el.style.setProperty('transform', `scale(${zoom})`, 'important');
+                    el.style.setProperty('filter', `brightness(${brightness}%) contrast(${contrast}%) saturate(115%)`, 'important');
+                });
+            } catch(e) {}
+        });
     }
 
     function initEnhancer() {
         if (document.getElementById('ai_camera_panel')) return;
 
-        let target = findCameraElement(document);
-        
-        if (!target) {
-            let iframes = document.querySelectorAll('iframe');
-            for (let i = 0; i < iframes.length; i++) {
-                try {
-                    let iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow.document;
-                    target = findCameraElement(iframeDoc);
-                    if (target) break;
-                } catch(e) {}
-            }
-        }
-
-        if (!target) return;
-
-        target.style.imageRendering = "crisp-edges";
-        target.style.imageRendering = "-webkit-optimize-contrast";
-        target.style.transition = "transform 0.1s ease-out";
-        target.style.transformOrigin = "top left";
-
         let panel = document.createElement('div');
         panel.id = 'ai_camera_panel';
-        panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:9999999; background:rgba(20,20,20,0.92); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:270px; border: 1px solid #4CAF50;";
+        panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:99999999; background:rgba(20,20,20,0.95); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:270px; border: 1px solid #4CAF50;";
         
         panel.innerHTML = `
             <h4 style="margin:0 0 12px 0; color:#4CAF50; font-size:14px; text-align:center; font-weight:bold; border-bottom:1px solid #333; padding-bottom:5px;">🎛️ تحسين الكاميرات الذكي (DIGIEVER)</h4>
@@ -64,7 +62,7 @@
         let lightSlider = document.getElementById('smart_light');
         let contrastSlider = document.getElementById('smart_contrast');
 
-        function applyLiveFilters() {
+        function updateLiveFilters() {
             let zoom = zoomSlider.value;
             let brightness = lightSlider.value;
             let contrast = contrastSlider.value;
@@ -73,15 +71,18 @@
             document.getElementById('l_val').innerText = brightness + "%";
             document.getElementById('c_val').innerText = contrast + "%";
             
-            target.style.transform = `scale(${zoom})`;
-            target.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(115%)`;
+            applyStyleToAllCameras(zoom, brightness, contrast);
         }
 
-        zoomSlider.addEventListener('input', applyLiveFilters);
-        lightSlider.addEventListener('input', applyLiveFilters);
-        contrastSlider.addEventListener('input', applyLiveFilters);
+        zoomSlider.addEventListener('input', updateLiveFilters);
+        lightSlider.addEventListener('input', updateLiveFilters);
+        contrastSlider.addEventListener('input', updateLiveFilters);
+
+        // الحفاظ على الفلاتر نشطة حتى لو قام الديفيجر بتحديث إطارات البث تلقائياً
+        setInterval(() => {
+            applyStyleToAllCameras(zoomSlider.value, lightSlider.value, contrastSlider.value);
+        }, 500);
     }
 
-    // فحص تلقائي ذكي كل ثانية للتكيف عند تنقلك بين الكاميرات أو السيرفرات المختلفة
     setInterval(initEnhancer, 1000);
 })();
