@@ -1,13 +1,10 @@
 (function() {
     function applyStyleToAllCameras(zoom, brightness, contrast) {
-        // 1. البحث عن جميع العناصر المحتملة للبث (فيديو، كانفاس، صور، كائنات)
         let elements = document.querySelectorAll('video, canvas, img, object, embed');
         
         elements.forEach(el => {
-            // استبعاد أزرار الواجهة ولوحة التحكم نفسها من التكبير
             if (el.closest('#ai_camera_panel') || el.width < 100 || el.height < 100) return;
 
-            // حقن التعديلات الرسومية مباشرة داخل خصائص العنصر
             el.style.setProperty('image-rendering', 'crisp-edges', 'important');
             el.style.setProperty('image-rendering', '-webkit-optimize-contrast', 'important');
             el.style.setProperty('transform-origin', 'top left', 'important');
@@ -15,7 +12,6 @@
             el.style.setProperty('filter', `brightness(${brightness}%) contrast(${contrast}%) saturate(115%)`, 'important');
         });
 
-        // 2. اختراق طبقات الـ iframes المعزولة وتطبيق نفس التعديل بالداخل
         document.querySelectorAll('iframe').forEach(iframe => {
             try {
                 let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -31,6 +27,38 @@
         });
     }
 
+    function makeElementDraggable(panel, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        handle.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            // التحقق من أن السحب لا يتم من أشرطة التمرير
+            if (e.target.type === 'range') return;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            panel.style.top = (panel.offsetTop - pos2) + "px";
+            panel.style.left = (panel.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
     function initEnhancer() {
         if (document.getElementById('ai_camera_panel')) return;
 
@@ -39,7 +67,9 @@
         panel.style.cssText = "position:fixed; top:120px; left:20px; z-index:99999999; background:rgba(20,20,20,0.95); color:white; padding:15px; border-radius:12px; font-family:Arial, sans-serif; direction:rtl; box-shadow: 0 10px 30px rgba(0,0,0,0.7); width:270px; border: 1px solid #4CAF50;";
         
         panel.innerHTML = `
-            <h4 style="margin:0 0 12px 0; color:#4CAF50; font-size:14px; text-align:center; font-weight:bold; border-bottom:1px solid #333; padding-bottom:5px;">🎛️ تحسين الكاميرات الذكي (DIGIEVER)</h4>
+            <div id="ai_drag_handle" style="cursor:move; margin:0 0 12px 0; border-bottom:1px solid #333; padding-bottom:5px; text-align:center;">
+                <h4 style="margin:0; color:#4CAF50; font-size:14px; font-weight:bold;">⣿ تحسين الكاميرات الذكي ⣿</h4>
+            </div>
             
             <div style="margin-bottom:12px;">
                 <label style="font-size:12px; display:block; margin-bottom:4px;">🔍 الزوم الفائق بدون بكسلة: <span id="z_val" style="color:#4CAF50; font-weight:bold;">1x</span></label>
@@ -57,6 +87,9 @@
             </div>
         `;
         document.body.appendChild(panel);
+
+        let dragHandle = document.getElementById('ai_drag_handle');
+        makeElementDraggable(panel, dragHandle);
 
         let zoomSlider = document.getElementById('smart_zoom');
         let lightSlider = document.getElementById('smart_light');
@@ -78,7 +111,6 @@
         lightSlider.addEventListener('input', updateLiveFilters);
         contrastSlider.addEventListener('input', updateLiveFilters);
 
-        // الحفاظ على الفلاتر نشطة حتى لو قام الديفيجر بتحديث إطارات البث تلقائياً
         setInterval(() => {
             applyStyleToAllCameras(zoomSlider.value, lightSlider.value, contrastSlider.value);
         }, 500);
